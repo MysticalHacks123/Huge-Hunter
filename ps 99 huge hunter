@@ -1,132 +1,223 @@
 -- Pet Simulator 99 Force Rarest Pet Script (Updated 2026 Attempt)
+
 -- Press INSERT to toggle GUI
+
 -- Toggle forces rarest pet via remote hook
 
 local Players = game:GetService("Players")
+
 local UserInputService = game:GetService("UserInputService")
+
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local player = Players.LocalPlayer
+
 local playerGui = player:WaitForChild("PlayerGui")
 
 if game.PlaceId ~= 8737899170 then
+
     warn("Script only for Pet Simulator 99 (PlaceId 8737899170)")
+
     return
+
 end
 
 -- GUI Setup (same as before, kept clean/dark/rounded)
+
 local screenGui = Instance.new("ScreenGui")
+
 screenGui.Name = "ForceRarestGUI"
+
 screenGui.ResetOnSpawn = false
+
 screenGui.Parent = playerGui
 
 local mainFrame = Instance.new("Frame")
+
 mainFrame.Size = UDim2.new(0, 350, 0, 220)
+
 mainFrame.Position = UDim2.new(0.5, -175, 0.5, -110)
+
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+
 mainFrame.BackgroundTransparency = 0.2
+
 mainFrame.BorderSizePixel = 0
+
 mainFrame.Parent = screenGui
 
 local uiCorner = Instance.new("UICorner")
+
 uiCorner.CornerRadius = UDim.new(0, 12)
+
 uiCorner.Parent = mainFrame
 
 local uiStroke = Instance.new("UIStroke")
+
 uiStroke.Thickness = 1
+
 uiStroke.Color = Color3.fromRGB(80, 80, 80)
+
 uiStroke.Transparency = 0.3
+
 uiStroke.Parent = mainFrame
 
 local titleLabel = Instance.new("TextLabel")
+
 titleLabel.Size = UDim2.new(1, 0, 0, 40)
+
 titleLabel.BackgroundTransparency = 1
+
 titleLabel.Text = "Force Rarest Pet"
+
 titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+
 titleLabel.TextScaled = true
+
 titleLabel.Font = Enum.Font.GothamBold
+
 titleLabel.Parent = mainFrame
 
 local statusLabel = Instance.new("TextLabel")
+
 statusLabel.Size = UDim2.new(1, -20, 0, 30)
+
 statusLabel.Position = UDim2.new(0, 10, 0, 50)
+
 statusLabel.BackgroundTransparency = 1
+
 statusLabel.Text = "Mode: OFF"
+
 statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+
 statusLabel.TextScaled = true
+
 statusLabel.Font = Enum.Font.GothamSemibold
+
 statusLabel.Parent = mainFrame
 
 local toggleButton = Instance.new("TextButton")
+
 toggleButton.Size = UDim2.new(0.8, 0, 0, 50)
+
 toggleButton.Position = UDim2.new(0.1, 0, 0, 100)
+
 toggleButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+
 toggleButton.Text = "Force Rarest: OFF"
+
 toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+
 toggleButton.TextScaled = true
+
 toggleButton.Font = Enum.Font.GothamBold
+
 toggleButton.Parent = mainFrame
 
 local toggleCorner = Instance.new("UICorner")
+
 toggleCorner.CornerRadius = UDim.new(0, 8)
+
 toggleCorner.Parent = toggleButton
 
 -- Draggable
+
 local dragging, dragInput, dragStart, startPos
+
 mainFrame.InputBegan:Connect(function(input)
+
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
+
         dragging = true
+
         dragStart = input.Position
+
         startPos = mainFrame.Position
+
         
+
         input.Changed:Connect(function()
+
             if input.UserInputState == Enum.UserInputState.End then
+
                 dragging = false
+
             end
+
         end)
+
     end
+
 end)
 
 UserInputService.InputChanged:Connect(function(input)
+
     if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+
         local delta = input.Position - dragStart
+
         mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+
     end
+
 end)
 
 -- INSERT toggle GUI
+
 UserInputService.InputBegan:Connect(function(input, gp)
+
     if gp then return end
+
     if input.KeyCode == Enum.KeyCode.Insert then
+
         screenGui.Enabled = not screenGui.Enabled
+
     end
+
 end)
 
 local forceEnabled = false
 
 local function toggle()
+
     forceEnabled = not forceEnabled
+
     if forceEnabled then
+
         toggleButton.Text = "Force Rarest: ON"
+
         toggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+
         statusLabel.Text = "Mode: ON (Trying to force rarest)"
+
         statusLabel.TextColor3 = Color3.fromRGB(0, 255, 100)
+
     else
+
         toggleButton.Text = "Force Rarest: OFF"
+
         toggleButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+
         statusLabel.Text = "Mode: OFF"
+
         statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+
     end
+
 end
 
 toggleButton.MouseButton1Click:Connect(toggle)
 
 screenGui.Enabled = true  -- start visible
+
 print("Force Rarest GUI ready. Press INSERT to hide/show. Toggle ON then hatch eggs.")
 
 -- =======================
+
 -- REMOTE HOOK (the important part)
+
 -- =======================
+
 local remotesFolder = ReplicatedStorage:FindFirstChild("Remotes") or ReplicatedStorage:FindFirstChild("Events") or ReplicatedStorage
 
 local possibleRemoteNames = {"HatchEgg", "EggHatch", "OpenEgg", "PurchaseEgg", "Hatch", "HatchMultiple"}
@@ -134,46 +225,83 @@ local possibleRemoteNames = {"HatchEgg", "EggHatch", "OpenEgg", "PurchaseEgg", "
 local targetRemote = nil
 
 for _, name in ipairs(possibleRemoteNames) do
+
     local remote = remotesFolder:FindFirstChild(name, true)
+
     if remote and (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) then
+
         targetRemote = remote
+
         print("Found possible hatch remote: " .. remote:GetFullName())
+
         break
+
     end
+
 end
 
 if not targetRemote then
+
     warn("No hatch remote found automatically. Hatch once with Dex/Script watcher open to see the remote name, then hardcode it below.")
+
 end
 
 -- Hook
+
 local oldNamecall
+
 oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+
     local method = getnamecallmethod()
+
     local args = {...}
+
     
+
     if not checkcaller() and forceEnabled and method == "FireServer" and self == targetRemote then
+
         print("Caught hatch call! Args:", unpack(args))
+
         
+
         -- args[1] is usually egg name / model / type
+
         local eggArg = args[1]
+
         local eggName = typeof(eggArg) == "string" and eggArg or (eggArg and eggArg.Name) or "Unknown"
+
         
+
         print("Detected egg: " .. eggName)
+
         
+
         -- Here: in real scripts you'd require egg module and pick pet with lowest chance / highest rarity
+
         -- For demo: force a placeholder "Huge Best Pet" or known rare name (change to real one)
+
         -- Many scripts spoof args[2] or inject pet table
+
         if #args >= 2 then
-            args[2] = "Huge Mythical Best"  -- <-- CHANGE THIS to a real rare pet name from the egg
+
+            args[2] = "Huge Mucki"  -- <-- CHANGE THIS to a real rare pet name from the egg
+
             -- or args[1] = rarePetId if it's ID based
+
             print("Spoofed to rare pet!")
+
         end
+
         
+
         return oldNamecall(self, unpack(args))
+
     end
+
     
+
     return oldNamecall(self, ...)
+
 end)
 
 print("Hook active. If no remote found, hatch an egg and check output for the remote name.")
